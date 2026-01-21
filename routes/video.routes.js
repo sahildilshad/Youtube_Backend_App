@@ -197,11 +197,13 @@ router.get("/my/:id", checkAuth, async (req, res) => {
 
 // views count
 
-router.patch("/view/:id", async (req, res) => {
+router.patch("/view/:videoid", async (req, res) => {
   try {
- const video = await Video.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } });
+    const video = await Video.findByIdAndUpdate(req.params.id, {
+      $inc: { views: 1 },
+    });
 
-      if (!video) {
+    if (!video) {
       return res.status(404).json({
         success: false,
         message: "Video not found",
@@ -209,10 +211,8 @@ router.patch("/view/:id", async (req, res) => {
     }
 
     res.status(200).json({
-      success:true
-    })
-
-
+      success: true,
+    });
   } catch (error) {
     console.log("error in logging", error.message);
     res.status(500).json({
@@ -223,11 +223,28 @@ router.patch("/view/:id", async (req, res) => {
   }
 });
 
+// like / unlike video
 
+router.get("/like/:videoid", checkAuth, async (req, res) => {
+  try {
+    const { videoid } = req.params;
+    
 
+    const video = await Video.findByIdAndUpdate(videoid, {
+      $addToSet: { likes: req.user._id },
+      $pull: { dislikes: req.user._id },
+    },{ new: true });
 
-
-
+    res.status(200).json({ message: "Liked the video", video });
+  } catch (error) {
+    console.log("error in logging", error.message);
+    res.status(500).json({
+      success: false,
+      message: "error in liking",
+      error: error.message,
+    });
+  }
+});
 
 
 
