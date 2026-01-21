@@ -28,8 +28,6 @@ router.post("/upload", checkAuth, upload.single("video"), async (req, res) => {
       folder: "videos",
     });
 
-
-
     const newVideo = new Video({
       title,
       description,
@@ -72,8 +70,6 @@ router.put("/update/:id", checkAuth, async (req, res) => {
     if (video.user_id.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: "unathorized" });
     }
-
-
 
     video.title = title || video.title;
     video.description = description || video.description;
@@ -140,5 +136,99 @@ router.delete("/delete/:id", checkAuth, async (req, res) => {
     });
   }
 });
+
+// get all videos
+
+router.get("/getallvideos", checkAuth, async (req, res) => {
+  try {
+    const videos = await Video.find()
+      .populate("user_id", "channelName logoUrl")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      message: "videos get successfully",
+      videos,
+    });
+  } catch (error) {
+    console.log("error in logging", error.message);
+    res.status(500).json({
+      success: false,
+      message: "error in logining",
+      error: error.message,
+    });
+  }
+});
+
+// get my own video
+router.get("/my/:id", checkAuth, async (req, res) => {
+  try {
+    const video = await Video.findById(req.params.id);
+
+    if (!video) {
+      return res.status(404).json({
+        success: false,
+        message: "video not found",
+      });
+    }
+
+    // check owner
+    if (req.user._id.toString() !== video.user_id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "video get successfully",
+      video,
+    });
+  } catch (error) {
+    console.log("error in logging", error.message);
+    res.status(500).json({
+      success: false,
+      message: "error in logining",
+      error: error.message,
+    });
+  }
+});
+
+// views count
+
+router.patch("/view/:id", async (req, res) => {
+  try {
+ const video = await Video.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } });
+
+      if (!video) {
+      return res.status(404).json({
+        success: false,
+        message: "Video not found",
+      });
+    }
+
+    res.status(200).json({
+      success:true
+    })
+
+
+  } catch (error) {
+    console.log("error in logging", error.message);
+    res.status(500).json({
+      success: false,
+      message: "error in logining",
+      error: error.message,
+    });
+  }
+});
+
+
+
+
+
+
+
+
 
 export default router;
