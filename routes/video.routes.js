@@ -9,8 +9,6 @@ const router = express.Router();
 
 // upload video
 router.post("/upload", checkAuth, upload.single("video"), async (req, res) => {
-  console.log("REQ BODY:", req.body); // title, description, category, tags
-  console.log("REQ FILE:", req.file); // video file info
 
   if (!req.file) return res.status(400).json({ message: "Video missing" });
 
